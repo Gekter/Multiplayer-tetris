@@ -1,0 +1,11 @@
+{
+  "name": "coursework",
+  "version": "0.0.1",
+  "description": "coursework is hard",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gekter",
+  "license": "ISC"
+}
