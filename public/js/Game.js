@@ -3,14 +3,16 @@ import Tetromino from "./Tetromino.js"
 
 
 export default class Game {
-  constructor(playfield, canvas) {
+  constructor(playfield, canvas, socket = false) {
     this.tetrominoes = this.initTetrominoes();
     this.playfield = new Playfield(playfield)
-    this.canvas = canvas
+    this.canvas = canvas 
     this.context = canvas.getContext('2d')
     this.sequence = []
     this.curTetromino = this.getNextTetromino()
 
+
+    this.socket = socket
     this.pressedKeys = {}
 
     this.idAnimation = null
@@ -144,6 +146,14 @@ export default class Game {
         this.curTetromino = this.getNextTetromino()
       } 
       
+    }
+
+    if(this.socket) {
+      if (Object.keys(this.pressedKeys).length != 0) {
+        this.socket.emit('tetromino move', this.pressedKeys)
+      } else {
+        this.socket.emit('tetromino move', {})
+      }
     }
     
 
