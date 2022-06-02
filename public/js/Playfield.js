@@ -62,7 +62,7 @@ export default class Playfield {
 
   addRow(arr) {
     let check = !this.matrix[0].some(cell => cell != 0)
-    
+
     for(let row = 0; row < this.matrix.length-1; row++) {
       for (let col = 0; col < this.matrix[row].length; col++) {
         this.matrix[row][col] = this.matrix[row+1][col];
@@ -73,41 +73,5 @@ export default class Playfield {
     return check
   }
 
-  // firstRowCheck() {
-  //     if (this.matrix[row].some(cell => cell != 0)) {
-  //       return false
-  //     }
-    
-  //   return true
-  // }
-
-  // genRow() {
-  //   let arr = []
-  //   let len = this.matrix.length
-  //   for (let i = 0; i < len; i++) {
-  //     arr[i] = 0
-  //   }
-  //   arr.fill('#BDB76B', 0, this.getRandomArbitrary(len-len/2+1,len))
-  //   return this.shuffle(arr)
-  // }
-
-  // getRandomArbitrary(min, max) {
-  //   min = Math.ceil(min);
-  //   max = Math.floor(max);
-  //   return Math.floor(Math.random() * (max - min) + min);
-  // }
-
-  // shuffle(array) {
-  //   let currentIndex = array.length,  randomIndex;
-  
-  //   while (currentIndex != 0) {
-  //     randomIndex = Math.floor(Math.random() * currentIndex);
-  //     currentIndex--;
-  //     [array[currentIndex], array[randomIndex]] = [
-  //       array[randomIndex], array[currentIndex]];
-  //   }
-  
-  //   return array;
-  // }
 
 }

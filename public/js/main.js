@@ -1,6 +1,7 @@
 import Game from "./Game.js"
 const socket = io()
 
+
 document.querySelectorAll('canvas').forEach((item) => {
   item.width = 320
   item.height = 640

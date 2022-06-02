@@ -88,14 +88,6 @@ export default class Game {
   }
 
 
-  // sequenceGen(seed) {
-  //   let len = this.tetrominoes.length
-  //   for (let i = 0; i < 250; i++){
-  //       this.sequence.push(Math.trunc(Math.abs(seed*(666/len)-len*seed+seed/100)%len))
-  //       
-  //   }
-  // }
-
   getNextTetromino() {
     let len = this.tetrominoes.length
     let index = Math.trunc(Math.abs(this.seed*(666/len)-len*this.seed+this.seed/100)%len)
