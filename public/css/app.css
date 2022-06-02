@@ -1,16 +1,53 @@
 html, body {
-    height: 100%;
-    margin: 0;
+  height: 100%;
+  margin: 0;
 }
 body {
-    background: black;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 canvas {
-   border: 1px solid white;
+  border: 1px solid white;
 }
-h1 {
+h1,h2 {
+  color: #e7e7e7;
+}
+#players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button {
+  display: block;
+  background-color: #e7e7e7;
+  color: black;
+  border: 2px solid #555555; 
+  font-size: 2em;
+  transition-duration: 0.4s;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  padding: 6px 10px;
+  margin: 0px 10px;
+} 
+
+button:hover {
+  background-color: #555555;
   color: white;
+}
+
+button:disabled,
+button[disabled]{
+  border: 1px solid #999999;
+  background-color: #cccccc;
+  color: #666666;
+  cursor: default;
+}
+
+#start {
+  margin-top: 1vh;
 }

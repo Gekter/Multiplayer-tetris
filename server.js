@@ -20,24 +20,70 @@ io.on("connection", (socket) => {
     socket.disconnect()
   }
 
+  socket.on('disconnect', () => {
+    socket.broadcast.emit('enemy crash', 'The enemy disconnected')
+  })
+
   socket.on('tetromino move', (moves) => {
     socket.broadcast.emit('tetromino move', moves)
   })
 
 
-
+  socket.on('add row', (obj) => {
+    for (let i = 0; i < obj.count; i++) {
+      let arr = genRow(obj.len)
+      socket.emit('add row enemy', arr)
+      socket.broadcast.emit('add row me', arr)
+    }
+  })
   
   socket.on('player ready', (text) => {
     ready++
     if (ready >= 2) {
-      io.sockets.emit('ready', text)
+      io.sockets.emit('ready', Math.trunc(Math.random()*100000000))
+      ready = 0
     } else {
       socket.broadcast.emit('player ready', text)
     }
   })
 
+  socket.on('win', (text) => {
+    socket.broadcast.emit('win', text)
+  })
 
+  socket.on('pause', () => {
+    io.sockets.emit('pause')
+  })
 
   socket.emit("hello", 'socket connected');
 });
 
+
+
+function genRow(len) {
+  let arr = []
+  for (let i = 0; i < len; i++) {
+    arr[i] = 0
+  }
+  arr.fill('#BDB76B', 0, getRandomArbitrary(len-len/2+1,len))
+  return shuffle(arr)
+}
+
+function getRandomArbitrary(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
+
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}

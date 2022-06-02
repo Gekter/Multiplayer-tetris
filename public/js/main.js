@@ -1,51 +1,47 @@
 import Game from "./Game.js"
 const socket = io()
 
-let playfield = [];
-    
-for (let row = -2; row < 20; row++) {
-  playfield[row] = [];
+document.querySelectorAll('canvas').forEach((item) => {
+  item.width = 320
+  item.height = 640
+})
 
-  for (let col = 0; col < 10; col++) {
-    playfield[row][col] = 0;
-  }
-}
 
-let playfield2 = [];
-    
-for (let row = -2; row < 20; row++) {
-  playfield2[row] = [];
+let gameClient = {}
+let gameEnemy = {}
 
-  for (let col = 0; col < 10; col++) {
-    playfield2[row][col] = 0;
-  }
-}
+let allowedKeys = {'ArrowDown': 1, 'ArrowUp': 1, 'ArrowRight': 1, 'ArrowLeft': 1}
 
-let gameClient = new Game(playfield, document.querySelector('#gameClient'), socket)
-let gameEnemy = new Game(playfield2, document.querySelector('#gameEnemy'))
 
 document.addEventListener('keydown', function(e) {
-  gameClient.pressedKeys[e.code] = true;
+  if (e.code in allowedKeys) {
+    gameClient.pressedKeys[e.code] = true;
+  }
 });
 
 document.addEventListener('keyup', function(e) {
-  delete gameClient.pressedKeys[e.code];
+  if (e.code in allowedKeys) {
+    delete gameClient.pressedKeys[e.code];
+  }
 });
 
 document.getElementById('start').addEventListener('click', ()=>{
   socket.emit('player ready', 'Enemy is ready')
-  document.querySelector('button').disabled = true; 
+  document.querySelector('#start').disabled = true; 
 });
 
 
 socket.on("player ready", (text) => {
-  document.querySelector('h1').innerText = text
+  document.querySelector('h2').innerText = text
 });
 
 
-socket.on("ready", (text) => {
-  console.log('Тут должна начаться игра');
-  document.querySelector('h1').remove();
+socket.on("ready", (seed) => {
+  gameClient = new Game(20, 10, document.querySelector('#gameClient'), seed, socket)
+  gameEnemy = new Game(20, 10, document.querySelector('#gameEnemy'), seed)
+
+  document.querySelector('h1').innerText = '';
+  document.querySelector('h2').innerText = '';
   requestAnimationFrame(gameClient.play);
   requestAnimationFrame(gameEnemy.play);
 });
@@ -59,8 +55,46 @@ socket.on("socket is busy", (reason) => {
   alert(reason)
 });
 
+
 socket.on("tetromino move", (moves) => {
-  console.log(moves); 
   gameEnemy.pressedKeys = moves
 });
+
+socket.on("win", (text) => {
+  document.querySelector('h1').innerText = text
+  document.querySelector('#start').disabled = false
+  document.querySelector('#start').innerText = 'Restart'
+});
+
+socket.on("pause", () => {
+  gameClient.pause()
+  gameEnemy.pause()
+})
+
+socket.on("add row enemy", (arr) => {
+  gameEnemy.addRow(arr)
+})
+
+socket.on("add row me", (arr) => {
+  gameClient.addRow(arr)
+})
+
+socket.on("enemy crash", (text) => {
+  console.log(text)
+  let recon = false
+  try {
+    gameClient.pause()
+    gameEnemy.pause()
+  } catch (err) {
+    recon = true
+    console.log('Enemy reconnecting')
+  }
+  if (!recon) {
+    document.querySelector('h1').innerText = text
+    document.querySelector('h2').innerText = 'technical victory'
+    document.querySelector('#start').disabled = false
+    document.querySelector('#start').innerText = 'Restart'
+    alert(text)
+  }
+})
 

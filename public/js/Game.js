@@ -2,19 +2,24 @@ import Playfield from "./Playfield.js"
 import Tetromino from "./Tetromino.js"
 
 
+
+
 export default class Game {
-  constructor(playfield, canvas, socket = false) {
+  constructor(rowPlayfield, colPlayfield, canvas, seed, socket = false) {
     this.tetrominoes = this.initTetrominoes();
-    this.playfield = new Playfield(playfield)
+    this.playfield = new Playfield(this.playfieldInit(rowPlayfield, colPlayfield), socket)
     this.canvas = canvas 
     this.context = canvas.getContext('2d')
     this.sequence = []
-    this.curTetromino = this.getNextTetromino()
+    this.seed = seed
 
 
     this.socket = socket
     this.pressedKeys = {}
+    this.prePressedKeys = {}
 
+    
+    this.curTetromino = this.getNextTetromino()
     this.idAnimation = null
     this.grid = 32
     this.curFPS = 0
@@ -83,19 +88,19 @@ export default class Game {
   }
 
 
-  sequenceGen(seed) {
-    let len = this.tetrominoes.length
-    for (let i = 0; i < 250; i++){
-        this.sequence.push(Math.trunc(Math.abs(seed*(666/len)-len*seed+seed/100)%len))
-        seed = Math.trunc((seed*seed+(73159*len+seed)-(seed*8))%4596378315)
-    }
-  }
+  // sequenceGen(seed) {
+  //   let len = this.tetrominoes.length
+  //   for (let i = 0; i < 250; i++){
+  //       this.sequence.push(Math.trunc(Math.abs(seed*(666/len)-len*seed+seed/100)%len))
+  //       
+  //   }
+  // }
 
   getNextTetromino() {
-    if (this.sequence.length === 0) {
-      this.sequenceGen(37131); // прикрутить получение seed с сервера
-    }
-    let index = this.sequence.pop()
+    let len = this.tetrominoes.length
+    let index = Math.trunc(Math.abs(this.seed*(666/len)-len*this.seed+this.seed/100)%len)
+    this.seed = Math.trunc((this.seed*this.seed+(73159*len+this.seed)-(this.seed*8))%1000000000)
+
     let tetromino = this.tetrominoes[index]
     tetromino.row = -2
     tetromino.col = this.playfield.matrix[0].length / 2 - Math.ceil(tetromino.matrix[0].length / 2)
@@ -149,10 +154,17 @@ export default class Game {
     }
 
     if(this.socket) {
-      if (Object.keys(this.pressedKeys).length != 0) {
-        this.socket.emit('tetromino move', this.pressedKeys)
-      } else {
-        this.socket.emit('tetromino move', {})
+      if (this.isPressedKeysChanges()) {
+        
+        if (Object.keys(this.pressedKeys).length != 0) {
+          this.socket.emit('tetromino move', this.pressedKeys)
+        } else {
+          this.socket.emit('tetromino move', {})
+        }
+        this.prePressedKeys = {}
+        for (let key in this.pressedKeys) {
+          this.prePressedKeys[key] = this.pressedKeys[key];
+        }
       }
     }
     
@@ -189,7 +201,24 @@ export default class Game {
   }
 
 
+  isPressedKeysChanges() {
+    return this.prePressedKeys["ArrowDown"] != this.pressedKeys["ArrowDown"] ||
+    this.prePressedKeys["ArrowUp"] != this.pressedKeys["ArrowUp"] ||
+    this.prePressedKeys["ArrowRight"] != this.pressedKeys["ArrowRight"] ||
+    this.prePressedKeys["ArrowLeft"] != this.pressedKeys["ArrowLeft"]
+  }
+
+
   showGameOver() {
+    if (this.socket) {
+      document.querySelector('#start').disabled = false
+      document.querySelector('#start').innerText = 'Restart'
+      document.querySelector('h1').innerText = 'You lose'
+      this.socket.emit('win', 'You won!')
+      this.socket.emit('pause')
+    }
+
+
     cancelAnimationFrame(this.idAnimation);
     this.context.fillStyle = 'black';
     this.context.globalAlpha = 0.75;
@@ -202,9 +231,32 @@ export default class Game {
     this.context.fillText('GAME OVER!', this.canvas.width / 2, this.canvas.height / 2);
   }
 
+  pause() {
+    cancelAnimationFrame(this.idAnimation);
+  }
 
-  
+  resume() {
+    requestAnimationFrame(this.play)
+  }
 
+  playfieldInit(rowP, colP) {
+    let playfield = [];
+    
+    for (let row = -2; row < rowP; row++) {
+      playfield[row] = [];
 
+      for (let col = 0; col < colP; col++) {
+        playfield[row][col] = 0;
+      }
+    }
+
+    return playfield
+  }
+
+  addRow(arr) {
+    if (!this.playfield.addRow(arr)) {
+      this.showGameOver()
+    }
+  }
 
 }
