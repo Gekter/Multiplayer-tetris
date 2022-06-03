@@ -55,3 +55,15 @@ button[disabled]{
 #start {
   margin-top: 1vh;
 }
+
+#gitHub {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#gitHubIcon {
+  background-color: #fff;  
+  margin: 5px;
+  padding: 0px;
+}

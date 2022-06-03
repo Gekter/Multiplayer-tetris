@@ -23,6 +23,9 @@ export default class Playfield {
   }
 
   placeTetromino(tetromino) {
+    if (this.socket){
+      this.socket.emit('place tetr', tetromino)
+    }
     for (let row = 0; row < tetromino.matrix.length; row++) {
       for (let col = 0; col < tetromino.matrix[row].length; col++) {
         if (tetromino.matrix[row][col]) {
@@ -35,8 +38,10 @@ export default class Playfield {
       } 
     }
     this.rowCheck()
+    
     return true;
   }
+
 
   rowCheck() {
     let addRowCount = 0;

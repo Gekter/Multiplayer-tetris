@@ -11,7 +11,7 @@ document.querySelectorAll('canvas').forEach((item) => {
 let gameClient = {}
 let gameEnemy = {}
 
-let allowedKeys = {'ArrowDown': 1, 'ArrowUp': 1, 'ArrowRight': 1, 'ArrowLeft': 1}
+let allowedKeys = {'ArrowDown': true, 'ArrowUp': true, 'ArrowRight': true, 'ArrowLeft': true}
 
 
 document.addEventListener('keydown', function(e) {
@@ -36,10 +36,14 @@ socket.on("player ready", (text) => {
   document.querySelector('h2').innerText = text
 });
 
+socket.on("place tetr", (tetr) => {
+  gameEnemy.playfield.placeTetromino(tetr)
+});
+
 
 socket.on("ready", (seed) => {
-  gameClient = new Game(20, 10, document.querySelector('#gameClient'), seed, socket)
-  gameEnemy = new Game(20, 10, document.querySelector('#gameEnemy'), seed)
+  gameClient = new Game(20, 10, document.querySelector('#gameClient'), seed, allowedKeys, socket)
+  gameEnemy = new Game(20, 10, document.querySelector('#gameEnemy'), seed, allowedKeys)
 
   document.querySelector('h1').innerText = '';
   document.querySelector('h2').innerText = '';

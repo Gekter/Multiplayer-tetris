@@ -5,13 +5,14 @@ import Tetromino from "./Tetromino.js"
 
 
 export default class Game {
-  constructor(rowPlayfield, colPlayfield, canvas, seed, socket = false) {
+  constructor(rowPlayfield, colPlayfield, canvas, seed, allowedKeys, socket = false) {
     this.tetrominoes = this.initTetrominoes();
     this.playfield = new Playfield(this.playfieldInit(rowPlayfield, colPlayfield), socket)
     this.canvas = canvas 
     this.context = canvas.getContext('2d')
     this.sequence = []
     this.seed = seed
+    this.allowedKeys = allowedKeys
 
 
     this.socket = socket
@@ -131,14 +132,17 @@ export default class Game {
       if (!this.playfield.isValidMove(this.curTetromino)) {
         this.curTetromino.rotateLeft()
       }
+      
     }
 
     if(this.pressedKeys['ArrowDown']) {
       this.curTetromino.row++;
       if (!this.playfield.isValidMove(this.curTetromino)) {
         this.curTetromino.row--;
-        if (!this.playfield.placeTetromino(this.curTetromino)) {
-          this.showGameOver()
+        if(this.socket) {
+          if (!this.playfield.placeTetromino(this.curTetromino)) {
+            this.showGameOver()
+          }
         }
         this.curTetromino = this.getNextTetromino()
       } 
@@ -171,8 +175,10 @@ export default class Game {
   
         if (!this.playfield.isValidMove(this.curTetromino)) {
           this.curTetromino.row--;
-          if (!this.playfield.placeTetromino(this.curTetromino)) {
-            this.showGameOver()
+          if(this.socket) {
+            if (!this.playfield.placeTetromino(this.curTetromino)) {
+              this.showGameOver()
+            }
           }
           this.curTetromino = this.getNextTetromino()
         }
@@ -194,10 +200,11 @@ export default class Game {
 
 
   isPressedKeysChanges() {
-    return this.prePressedKeys["ArrowDown"] != this.pressedKeys["ArrowDown"] ||
-    this.prePressedKeys["ArrowUp"] != this.pressedKeys["ArrowUp"] ||
-    this.prePressedKeys["ArrowRight"] != this.pressedKeys["ArrowRight"] ||
-    this.prePressedKeys["ArrowLeft"] != this.pressedKeys["ArrowLeft"]
+    let check = false
+    for (let key in this.allowedKeys) {
+      check |= (this.prePressedKeys[key] != this.pressedKeys[key])
+    }
+    return check
   }
 
 
@@ -228,7 +235,7 @@ export default class Game {
   }
 
   resume() {
-    requestAnimationFrame(this.play)
+    this.idAnimation = requestAnimationFrame(this.play)
   }
 
   playfieldInit(rowP, colP) {
@@ -246,6 +253,7 @@ export default class Game {
   }
 
   addRow(arr) {
+    this.curTetromino.row--
     if (!this.playfield.addRow(arr)) {
       this.showGameOver()
     }

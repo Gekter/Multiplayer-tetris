@@ -54,6 +54,10 @@ io.on("connection", (socket) => {
     io.sockets.emit('pause')
   })
 
+  socket.on('place tetr', (tetr) => {
+    socket.broadcast.emit('place tetr', tetr)
+  })
+
   socket.emit("hello", 'socket connected');
 });
 
