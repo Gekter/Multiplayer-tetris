@@ -33,7 +33,7 @@ export default class Playfield {
           if (tetromino.row + row < 0) {
             return false;
           }
-          this.matrix[tetromino.row + row][tetromino.col + col] = tetromino.color;
+          this.matrix[tetromino.row + row][+tetromino.col + col] = tetromino.color;
         }
       } 
     }

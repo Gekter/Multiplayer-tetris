@@ -5,7 +5,7 @@ import Tetromino from "./Tetromino.js"
 
 
 export default class Game {
-  constructor(rowPlayfield, colPlayfield, canvas, seed, allowedKeys, socket = false) {
+  constructor(rowPlayfield, colPlayfield, grid, canvas, seed, allowedKeys, socket = false) {
     this.tetrominoes = this.initTetrominoes();
     this.playfield = new Playfield(this.playfieldInit(rowPlayfield, colPlayfield), socket)
     this.canvas = canvas 
@@ -13,16 +13,20 @@ export default class Game {
     this.sequence = []
     this.seed = seed
     this.allowedKeys = allowedKeys
-
-
+    this.test = false
     this.socket = socket
     this.pressedKeys = {}
     this.prePressedKeys = {}
 
+    // fps lock
+    this.fpsInterval = 1000 / 30;
+    this.then = Date.now();
+    this.startTime = this.then;
+
     
     this.curTetromino = this.getNextTetromino()
     this.idAnimation = null
-    this.grid = 32
+    this.grid = grid
     this.curFPS = 0
     this.play = this.play.bind(this)
   }
@@ -102,77 +106,57 @@ export default class Game {
 
   play() {
     this.idAnimation = requestAnimationFrame(this.play)
-    this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
-    for (let row = 0; row < 20; row++) {
-      for (let col = 0; col < 10; col++) {
-        if (this.playfield.matrix[row][col]) {
-          this.context.fillStyle = this.playfield.matrix[row][col]
 
-          this.context.fillRect(col * this.grid, row * this.grid, this.grid-1, this.grid-1);
-        }
-      }
-    }
+    let now = Date.now();
+    let elapsed = now - this.then;
 
-    if (this.pressedKeys['ArrowLeft']) {
-      this.curTetromino.col--
-      if (!this.playfield.isValidMove(this.curTetromino)) {
-        this.curTetromino.col++
-      }
-    }
+    if (elapsed > this.fpsInterval) {
 
-    if (this.pressedKeys['ArrowRight']) {
-      this.curTetromino.col++
-      if (!this.playfield.isValidMove(this.curTetromino)) {
-        this.curTetromino.col--
-      }
-    }
+      // Get ready for next frame by setting then=now, but also adjust for your
+      // specified fpsInterval not being a multiple of RAF's interval (16.7ms)
+      this.then = now - (elapsed % this.fpsInterval);
 
-    if (this.pressedKeys['ArrowUp']) {
-      this.curTetromino.rotateRight()
-      if (!this.playfield.isValidMove(this.curTetromino)) {
-        this.curTetromino.rotateLeft()
-      }
       
-    }
 
-    if(this.pressedKeys['ArrowDown']) {
-      this.curTetromino.row++;
-      if (!this.playfield.isValidMove(this.curTetromino)) {
-        this.curTetromino.row--;
-        if(this.socket) {
-          if (!this.playfield.placeTetromino(this.curTetromino)) {
-            this.showGameOver()
+    
+
+
+      this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
+      for (let row = 0; row < this.playfield.matrix.length; row++) {
+        for (let col = 0; col < this.playfield.matrix[row].length; col++) {
+          if (this.playfield.matrix[row][col]) {
+            this.context.fillStyle = this.playfield.matrix[row][col]
+
+            this.context.fillRect(col * this.grid, row * this.grid, this.grid-1, this.grid-1);
           }
         }
-        this.curTetromino = this.getNextTetromino()
-      } 
-      
-    }
+      }
 
-    if(this.socket) {
-      if (this.isPressedKeysChanges()) {
-        
-        if (Object.keys(this.pressedKeys).length != 0) {
-          this.socket.emit('tetromino move', this.pressedKeys)
-        } else {
-          this.socket.emit('tetromino move', {})
-        }
-        this.prePressedKeys = {}
-        for (let key in this.pressedKeys) {
-          this.prePressedKeys[key] = this.pressedKeys[key];
+      if (this.pressedKeys['ArrowLeft']) {
+        this.curTetromino.col--
+        if (!this.playfield.isValidMove(this.curTetromino)) {
+          this.curTetromino.col++
         }
       }
-    }
-    
 
-    
+      if (this.pressedKeys['ArrowRight']) {
+        this.curTetromino.col++
+        if (!this.playfield.isValidMove(this.curTetromino)) {
+          this.curTetromino.col--
+        }
+      }
 
-    if (this.curTetromino) {
+      if (this.pressedKeys['ArrowUp'] && this.test) {
+        this.test = false
+        this.curTetromino.rotateRight()
+        if (!this.playfield.isValidMove(this.curTetromino)) {
+          this.curTetromino.rotateLeft()
+        }
+        
+      }
 
-      if (++this.curFPS > 35) {
+      if(this.pressedKeys['ArrowDown']) {
         this.curTetromino.row++;
-        this.curFPS = 0;
-  
         if (!this.playfield.isValidMove(this.curTetromino)) {
           this.curTetromino.row--;
           if(this.socket) {
@@ -181,21 +165,57 @@ export default class Game {
             }
           }
           this.curTetromino = this.getNextTetromino()
-        }
+        } 
+        
       }
-  
-      this.context.fillStyle = this.curTetromino.color;
-  
-      for (let row = 0; row < this.curTetromino.matrix.length; row++) {
-        for (let col = 0; col < this.curTetromino.matrix[row].length; col++) {
-          if (this.curTetromino.matrix[row][col]) {
 
-            this.context.fillRect((this.curTetromino.col + col) * this.grid, (this.curTetromino.row + row) * this.grid, this.grid-1, this.grid-1);
+      if(this.socket) {
+        if (this.isPressedKeysChanges()) {
+          
+          if (Object.keys(this.pressedKeys).length != 0) {
+            this.socket.emit('tetromino move', this.pressedKeys)
+          } else {
+            this.socket.emit('tetromino move', {})
+          }
+          this.prePressedKeys = {}
+          for (let key in this.pressedKeys) {
+            this.prePressedKeys[key] = this.pressedKeys[key];
           }
         }
       }
-    }
+      
+
+      
+
+      if (this.curTetromino) {
+
+        if (++this.curFPS > 10) {
+          this.curTetromino.row++;
+          this.curFPS = 0;
     
+          if (!this.playfield.isValidMove(this.curTetromino)) {
+            this.curTetromino.row--;
+            if(this.socket) {
+              if (!this.playfield.placeTetromino(this.curTetromino)) {
+                this.showGameOver()
+              }
+            }
+            this.curTetromino = this.getNextTetromino()
+          }
+        }
+    
+        this.context.fillStyle = this.curTetromino.color;
+    
+        for (let row = 0; row < this.curTetromino.matrix.length; row++) {
+          for (let col = 0; col < this.curTetromino.matrix[row].length; col++) {
+            if (this.curTetromino.matrix[row][col]) {
+
+              this.context.fillRect((this.curTetromino.col + col) * this.grid, (this.curTetromino.row + row) * this.grid, this.grid-1, this.grid-1);
+            }
+          }
+        }
+      }
+    }  
   }
 
 
@@ -205,6 +225,13 @@ export default class Game {
       check |= (this.prePressedKeys[key] != this.pressedKeys[key])
     }
     return check
+  }
+
+  startAnimating(fps) {
+    this.fpsInterval = 1000 / fps;
+    this.then = Date.now();
+    this.startTime = this.then;
+    this.play();
   }
 
 

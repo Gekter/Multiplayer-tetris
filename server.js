@@ -7,8 +7,8 @@ const io = new Server(server);
 
 app.use(express.static('public'));
 
-server.listen(3000, () => {
-  console.log('listening on *:3000');
+server.listen(80, () => {
+  console.log('listening on *:80');
 });
 
 let ready = 0;
@@ -29,7 +29,7 @@ io.on("connection", (socket) => {
 
 
   socket.on('add row', (obj) => {
-    for (let i = 0; i < obj.count; i++) {
+    for (let i = 0; i < obj.count-1; i++) {
       let arr = genRow(obj.len)
       socket.emit('add row enemy', arr)
       socket.broadcast.emit('add row me', arr)

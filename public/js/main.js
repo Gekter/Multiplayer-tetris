@@ -1,10 +1,13 @@
 import Game from "./Game.js"
 const socket = io()
 
+const col = 10
+const row = 20
+const grid = 32
 
 document.querySelectorAll('canvas').forEach((item) => {
-  item.width = 320
-  item.height = 640
+  item.width = grid * col
+  item.height = grid * row
 })
 
 
@@ -12,17 +15,24 @@ let gameClient = {}
 let gameEnemy = {}
 
 let allowedKeys = {'ArrowDown': true, 'ArrowUp': true, 'ArrowRight': true, 'ArrowLeft': true}
-
+let ArrowUPdown = false
 
 document.addEventListener('keydown', function(e) {
   if (e.code in allowedKeys) {
     gameClient.pressedKeys[e.code] = true;
+    if (e.code == 'ArrowUp' && !ArrowUPdown) {
+      ArrowUPdown = true
+      gameClient.test = true
+    }
   }
 });
 
 document.addEventListener('keyup', function(e) {
   if (e.code in allowedKeys) {
     delete gameClient.pressedKeys[e.code];
+    if (e.code == 'ArrowUp') {
+      ArrowUPdown = false
+    }
   }
 });
 
@@ -42,13 +52,13 @@ socket.on("place tetr", (tetr) => {
 
 
 socket.on("ready", (seed) => {
-  gameClient = new Game(20, 10, document.querySelector('#gameClient'), seed, allowedKeys, socket)
-  gameEnemy = new Game(20, 10, document.querySelector('#gameEnemy'), seed, allowedKeys)
+  gameClient = new Game(row, col, grid, document.querySelector('#gameClient'), seed, allowedKeys, socket)
+  gameEnemy = new Game(row, col, grid, document.querySelector('#gameEnemy'), seed, allowedKeys)
 
   document.querySelector('h1').innerText = '';
   document.querySelector('h2').innerText = '';
-  requestAnimationFrame(gameClient.play);
-  requestAnimationFrame(gameEnemy.play);
+  gameClient.startAnimating(20)
+  gameEnemy.startAnimating(20)
 });
 
 socket.on("hello", (arg) => {
