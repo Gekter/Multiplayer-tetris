@@ -30,7 +30,7 @@ document.addEventListener('keydown', function(e) {
     gameClient.pressedKeys[e.code] = true;
     if (e.code == 'ArrowUp' && !ArrowUPdown) {
       ArrowUPdown = true
-      gameClient.test = true
+      gameClient.keyUPdown = true
     }
   }
 });
@@ -43,6 +43,7 @@ document.addEventListener('keyup', function(e) {
     }
   }
 });
+
 
 document.getElementById('start').addEventListener('click', ()=>{
   socket.emit('player ready', 'Enemy is ready')
@@ -69,9 +70,6 @@ socket.on("ready", (seed) => {
   gameEnemy.startAnimating(20)
 });
 
-socket.on("hello", (arg) => {
-  console.log(arg); 
-});
 
 socket.on("socket is busy", (reason) => {
   console.log(reason)
@@ -81,7 +79,7 @@ socket.on("socket is busy", (reason) => {
 
 socket.on("tetromino move", (moves) => {
   if ('ArrowUp' in moves) {
-    gameEnemy.test = true
+    gameEnemy.keyUPdown = true
   }
   gameEnemy.pressedKeys = moves
 });

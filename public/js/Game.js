@@ -10,10 +10,9 @@ export default class Game {
     this.playfield = new Playfield(this.playfieldInit(rowPlayfield, colPlayfield), socket)
     this.canvas = canvas 
     this.context = canvas.getContext('2d')
-    this.sequence = []
     this.seed = seed
     this.allowedKeys = allowedKeys
-    this.test = false
+    this.keyUPdown = false
     this.socket = socket
     this.pressedKeys = {}
     this.prePressedKeys = {}
@@ -139,8 +138,8 @@ export default class Game {
         }
       }
 
-      if (this.pressedKeys['ArrowUp'] && this.test) {
-        this.test = false
+      if (this.pressedKeys['ArrowUp'] && this.keyUPdown) {
+        this.keyUPdown = false
         this.curTetromino.rotateRight()
         if (!this.playfield.isValidMove(this.curTetromino)) {
           this.curTetromino.rotateLeft()
