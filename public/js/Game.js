@@ -112,14 +112,7 @@ export default class Game {
 
     if (elapsed > this.fpsInterval) {
 
-      // Get ready for next frame by setting then=now, but also adjust for your
-      // specified fpsInterval not being a multiple of RAF's interval (16.7ms)
       this.then = now - (elapsed % this.fpsInterval);
-
-      
-
-    
-
 
       this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
       for (let row = 0; row < this.playfield.matrix.length; row++) {

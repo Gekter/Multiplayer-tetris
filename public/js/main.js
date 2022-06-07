@@ -3,13 +3,20 @@ const socket = io()
 
 const col = 10
 const row = 20
-const grid = 32
+const grid = Math.trunc(window.innerHeight / 30)
 
 document.querySelectorAll('canvas').forEach((item) => {
   item.width = grid * col
   item.height = grid * row
 })
 
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === 'visible') {
+    socket.emit('visibility resume')
+  } else {
+    socket.emit('visibility pause')
+  }
+});
 
 let gameClient = {}
 let gameEnemy = {}
@@ -72,6 +79,9 @@ socket.on("socket is busy", (reason) => {
 
 
 socket.on("tetromino move", (moves) => {
+  if ('ArrowUp' in moves) {
+    gameEnemy.test = true
+  }
   gameEnemy.pressedKeys = moves
 });
 
@@ -79,6 +89,7 @@ socket.on("win", (text) => {
   document.querySelector('h1').innerText = text
   document.querySelector('#start').disabled = false
   document.querySelector('#start').innerText = 'Restart'
+  gameEnd = true
 });
 
 socket.on("pause", () => {
@@ -94,22 +105,45 @@ socket.on("add row me", (arr) => {
   gameClient.addRow(arr)
 })
 
-socket.on("enemy crash", (text) => {
-  console.log(text)
-  let recon = false
+socket.on("enemy crash", (gameEnd) => {
+  if (!gameEnd) {
+    let text = 'Enemy disconnected'
+    gameClient.pause()
+    gameEnemy.pause()
+    document.querySelector('h1').innerText = text
+    document.querySelector('h2').innerText = 'technical victory'
+    document.querySelector('#start').innerText = 'Restart'
+    alert(text)
+  } else {
+    document.querySelector('h1').innerText = ''
+  }
+  document.querySelector('#start').disabled = true
+
+
+})
+
+socket.on("visibility pause", (text) => {
   try {
     gameClient.pause()
     gameEnemy.pause()
-  } catch (err) {
-    recon = true
-    console.log('Enemy reconnecting')
+    document.querySelector('h2').innerText = text
+  } catch {
+    console.log('The game has not started')
   }
-  if (!recon) {
-    document.querySelector('h1').innerText = text
-    document.querySelector('h2').innerText = 'technical victory'
-    document.querySelector('#start').disabled = false
-    document.querySelector('#start').innerText = 'Restart'
-    alert(text)
+})
+
+socket.on("visibility resume", (text) => {
+  try {
+    gameClient.resume()
+    gameEnemy.resume()
+    document.querySelector('h2').innerText = text
+  } catch {
+    console.log('The game has not started')
   }
+})
+
+socket.on("enemy con", (text) => {
+  document.querySelector('h1').innerText = text
+  document.querySelector('#start').disabled = false
 })
 

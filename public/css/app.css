@@ -9,6 +9,10 @@ body {
   
 }
 
+h1 {
+  margin: 0;
+}
+
 #gameBlock {
   display: flex;
   align-items: center;

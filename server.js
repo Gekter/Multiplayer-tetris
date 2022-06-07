@@ -12,6 +12,8 @@ server.listen(80, () => {
 });
 
 let ready = 0;
+let pause = 0;
+let gameEnd = false;
 
 io.on("connection", (socket) => {
   if (io.engine.clientsCount > 2) {
@@ -20,7 +22,7 @@ io.on("connection", (socket) => {
   }
 
   socket.on('disconnect', () => {
-    socket.broadcast.emit('enemy crash', 'The enemy disconnected')
+    socket.broadcast.emit('enemy crash', gameEnd)
   })
 
   socket.on('tetromino move', (moves) => {
@@ -39,6 +41,7 @@ io.on("connection", (socket) => {
   socket.on('player ready', (text) => {
     ready++
     if (ready >= 2) {
+      gameEnd = false;
       io.sockets.emit('ready', Math.trunc(Math.random()*100000000))
       ready = 0
     } else {
@@ -47,7 +50,23 @@ io.on("connection", (socket) => {
   })
 
   socket.on('win', (text) => {
+    gameEnd = true;
     socket.broadcast.emit('win', text)
+  })
+
+  socket.on('visibility pause', () => {
+    pause++
+    if (pause >= 1 && !gameEnd) {
+      io.sockets.emit('visibility pause', 'Game pause')
+    }
+  })
+
+
+  socket.on('visibility resume', () => {
+    pause--
+    if (pause == 0 && !gameEnd) {
+      io.sockets.emit('visibility resume', 'Game resume')
+    }
   })
 
   socket.on('pause', () => {
@@ -58,7 +77,10 @@ io.on("connection", (socket) => {
     socket.broadcast.emit('place tetr', tetr)
   })
 
-  socket.emit("hello", 'socket connected');
+
+  if (io.engine.clientsCount == 2) {
+    io.sockets.emit('enemy con', 'Enemy is connected')
+  }
 });
 
 
