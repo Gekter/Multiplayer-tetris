@@ -4,6 +4,7 @@ const socket = io()
 const col = 10
 const row = 20
 const grid = Math.trunc(window.innerHeight / 30)
+let gameStart = false
 
 document.querySelectorAll('canvas').forEach((item) => {
   item.width = grid * col
@@ -61,7 +62,7 @@ socket.on("place tetr", (tetr) => {
 socket.on("ready", (seed) => {
   gameClient = new Game(row, col, grid, document.querySelector('#gameClient'), seed, allowedKeys, socket)
   gameEnemy = new Game(row, col, grid, document.querySelector('#gameEnemy'), seed, allowedKeys)
-
+  gameStart = true
   document.querySelector('h1').innerText = '';
   document.querySelector('h2').innerText = '';
   gameClient.startAnimating(20)
@@ -106,7 +107,7 @@ socket.on("add row me", (arr) => {
 })
 
 socket.on("enemy crash", (gameEnd) => {
-  if (!gameEnd) {
+  if (!gameEnd && gameStart) {
     let text = 'Enemy disconnected'
     gameClient.pause()
     gameEnemy.pause()

@@ -22,6 +22,10 @@ io.on("connection", (socket) => {
   }
 
   socket.on('disconnect', () => {
+    if (ready > 0) {
+      ready--
+    }
+    
     socket.broadcast.emit('enemy crash', gameEnd)
   })
 
